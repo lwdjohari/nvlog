@@ -11,10 +11,52 @@ Modern C++ Logger with multithread support, custom sink and custom formatter. No
 - Console Sink 
 - Defered File Sink
 - Custom Sink Supoort
-- Easy custom formmatter for each sink
+- Easy custom formatter for each sink
 
 > [!Warning]
-> NvLog never intended be designed as non multithreaded logger 
+> NvLog is never intended be designed as non multithreaded logger 
+
+## Custom Formatter
+For each sink, you can customize based on default formatter callback.
+
+Default Formatter 
+
+```cpp
+
+void DefaultFormatter(std::ostringstream& buffer,
+                             const LogMessage& log_message) {
+  auto time = log_message.timestamp;
+  auto time_t = std::chrono::system_clock::to_time_t(time);
+  auto tm = *std::localtime(&time_t);
+  auto ms = std::chrono::duration_cast<std::chrono::microseconds>(
+                time.time_since_epoch()) %
+            1000000;
+
+  // clang-format off
+  DefaultLevelFormatter(buffer, log_message.log_level);
+  buffer 
+      << std::setw(4) << std::setfill('0') << (1900 + tm.tm_year) << "-"
+      << std::setw(2) << std::setfill('0') << (1 + tm.tm_mon) << "-"
+      << std::setw(2) << tm.tm_mday
+      << ' '
+      << std::setw(2) << tm.tm_hour << ':'
+      << std::setw(2) << tm.tm_min << ':'
+      << std::setw(2) << tm.tm_sec << '.'
+      << std::setw(6) << ms.count()
+      << ' '
+      << std::setw(5) << std::setfill(' ') << log_message.thread_id << std::setfill('0')
+      << ' '
+      << log_message.file << ':' << log_message.line << "]\n" 
+      << std::left << std::setw(8) << std::setfill(' ') << " " 
+      << "[" << log_message.tag << "] " << log_message.message;
+  // clang-format on
+
+  buffer << std::resetiosflags(std::ios::adjustfield | std::ios::basefield |
+                               std::ios::floatfield)
+         << std::setfill('0');
+}
+
+```
 
 ## Contributions
 
