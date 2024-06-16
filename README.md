@@ -10,7 +10,7 @@ Modern C++ Logger with multithread support, custom sink and custom formatter. No
 - Channel Multi-worker support (default to 1 worker)
 - Console Sink 
 - Defered File Sink
-- Custom Sink Supoort
+- Custom Sink Support
 - Easy custom formatter for each sink
 
 > [!Warning]
