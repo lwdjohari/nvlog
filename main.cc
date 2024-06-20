@@ -11,10 +11,8 @@ void LogProducer(int thread_id, int log_count) {
     LOG_INFO_T("Log message from worker #" + std::to_string(thread_id) +
                    " message #" + std::to_string(i),
                "W#" + std::to_string(thread_id))
-    products_[thread_id] = products_[thread_id]+1;
-    
+    products_[thread_id] = products_[thread_id] + 1;
   }
-
 }
 
 void CreateProducers(int num_producers, int logs_per_producer) {
@@ -34,7 +32,7 @@ void CreateProducers(int num_producers, int logs_per_producer) {
 
 int main(int argc, char* argv[]) {
   // Set number of producer threads and number of logs per thread
-  int num_producers = 4;      // Default number of producers
+  int num_producers = 4;        // Default number of producers
   int logs_per_producer = 100;  // Default number of logs per producer
 
   try {
@@ -49,19 +47,21 @@ int main(int argc, char* argv[]) {
     return 1;
   }
 
-  worker_number_  = num_producers;
+  worker_number_ = num_producers;
   products_ = std::vector<uint64_t>();
-  for (size_t i = 0; i < worker_number_; i++)
-  {
+  for (size_t i = 0; i < worker_number_; i++) {
     products_.push_back(0);
   }
-  
 
   // Initialize the logger and sinks
   auto console_sink = std::make_shared<nvlog::ConsoleSink>();
   console_sink->SetFormatter(nvlog::SimpleFormatter);
-  std::vector<std::shared_ptr<nvlog::Sink>> sinks = {console_sink};
-  
+
+  auto file_sink = std::make_shared<nvlog::DeferredFileSink>(
+      "app.log", 8 * 1024, std::chrono::seconds(10));
+
+  std::vector<std::shared_ptr<nvlog::Sink>> sinks = {console_sink, file_sink};
+
   nvlog::Logger::RegisterLogger(sinks);
   nvlog::Logger::Get()->StartEngine();
 
@@ -72,10 +72,9 @@ int main(int argc, char* argv[]) {
   LOG_TRACE_T("Logger shutdown", "LOGGER")
   nvlog::Logger::Get()->ShutdownEngine();
 
-  for (auto &p : products_)
-  {
+  for (auto& p : products_) {
     std::cout << "product:" << p << std::endl;
   }
-  
+
   return 0;
 }

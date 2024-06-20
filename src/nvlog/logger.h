@@ -17,25 +17,21 @@ class Logger {
 
   explicit Logger(std::shared_ptr<limiters::RateLimiter> rate_limiter,
                   std::vector<std::shared_ptr<nvlog::Sink>>& sinks)
-                  : channel_(std::make_shared<Channel>(rate_limiter, sinks)) {
-   
-  }
+                  : channel_(std::make_shared<Channel>(rate_limiter, sinks)) {}
 
   void StartEngine() {
-     channel_->Start();
+    channel_->Start();
   }
 
   bool IsRun() const {
     return channel_->IsRun();
   }
 
-  void ShutdownEngine(bool force = false){
+  void ShutdownEngine(bool force = false) {
     channel_->Shutdown(force);
   }
 
-  ~Logger() {
-    
-  }
+  ~Logger() {}
 
   static void RegisterLogger(std::vector<std::shared_ptr<nvlog::Sink>>& sinks) {
     std::lock_guard<std::mutex> lock(mutex_);
@@ -88,8 +84,8 @@ class Logger {
   nvlog::Logger::Get()->Log(nvlog::LogLevel::Error, message, "", __FILE__, \
                             __LINE__);
 
-#define LOG_CRITICAL(message)                                                 \
-  nvlog::Logger::Get()->Log(nvlog::LogLevel::Critical, message, "", __FILE__, \
+#define LOG_FATAL(message)                                                 \
+  nvlog::Logger::Get()->Log(nvlog::LogLevel::Fatal, message, "", __FILE__, \
                             __LINE__);
 
 // LOG Trace with tag
@@ -114,8 +110,8 @@ class Logger {
   nvlog::Logger::Get()->Log(nvlog::LogLevel::Error, message, tag, __FILE__, \
                             __LINE__);
 
-#define LOG_CRITICAL_T(message, tag)                                           \
-  nvlog::Logger::Get()->Log(nvlog::LogLevel::Critical, message, tag, __FILE__, \
+#define LOG_FATAL_T(message, tag)                                           \
+  nvlog::Logger::Get()->Log(nvlog::LogLevel::Fatal, message, tag, __FILE__, \
                             __LINE__);
 
 // LOG Trace with tag
@@ -153,10 +149,10 @@ class Logger {
                               __LINE__);                                      \
   }
 
-// LOG Critical with tag
-#define LOG_CRITICAL_COND_T(statement, message, tag)                   \
-  if (statement) {                                                     \
-    nvlog::Logger::Get()->Log(nvlog::LogLevel::Critical, message, tag, \
-                              __FILE__, __LINE__);                     \
+// LOG Fatal with tag
+#define LOG_FATAL_COND_T(statement, message, tag)                             \
+  if (statement) {                                                            \
+    nvlog::Logger::Get()->Log(nvlog::LogLevel::Fatal, message, tag, __FILE__, \
+                              __LINE__);                                      \
   }
 }  // namespace nvlog

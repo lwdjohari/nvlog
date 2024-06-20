@@ -7,6 +7,7 @@
 #include "nvlog/formatter.h"
 #include "nvlog/sink.h"
 
+
 namespace nvlog {
 class DeferredFileSink : public AsyncSink {
  public:
@@ -40,7 +41,7 @@ class DeferredFileSink : public AsyncSink {
   void Process(const std::shared_ptr<LogMessage>& log_message) override {
     std::ostringstream ss;
     if (formatter_) {
-      formatter_(ss, *log_message)
+      formatter_(ss, *log_message);
     } else {
       DefaultFormatter(ss, *log_message);
     }

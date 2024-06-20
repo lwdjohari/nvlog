@@ -23,7 +23,7 @@ inline void DefaultLevelFormatter(std::ostringstream& buffer,
     case LogLevel::Error:
       buffer << std::left << std::setw(8) << std::setfill(' ') << "ERROR";
       break;
-    case LogLevel::Critical:
+    case LogLevel::Fatal:
       buffer << std::left << std::setw(8) << std::setfill(' ') << "CRITICAL";
       break;
     default:

@@ -10,7 +10,7 @@
 #include "macro.h"
 
 namespace nvlog {
-enum class LogLevel { Trace, Debug, Info, Warning, Error, Critical };
+enum class LogLevel { Trace, Debug, Info, Warning, Error, Fatal };
 
 // Return current thread ID
 // return: ```int```
