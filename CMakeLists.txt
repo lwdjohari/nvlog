@@ -39,6 +39,8 @@ file(GLOB_RECURSE SOURCES_NVLOG CONFIGURE_DEPENDS
 
 add_library(${PROJECT_NAME} STATIC ${SOURCES_NVLOG} )
 if (NV_MINGW)
+    message(STATUS "Compile Lib using MINGW: ON")
+
     target_link_libraries(${PROJECT_NAME} 
         PUBLIC 
             pthread 
@@ -56,8 +58,8 @@ add_library(${PROJECT_NAME}::${PROJECT_NAME} ALIAS ${PROJECT_NAME} )
 
 NV_SET_DIST_DIR(${PROJECT_NAME} ${CMAKE_CURRENT_SOURCE_DIR} ${NV_COMPILER_KEY})
 
-message(STATUS "${NV_COMPILER_KEY}")
-if(NOT NV_COMPILER_KEY STREQUAL "mingw32")
+
+if(NOT NV_MINGW)
     message(STATUS "NvLog Test: ON")
     add_subdirectory(tests build-nvlog-test)
 else()
@@ -66,6 +68,7 @@ endif()
 
 add_executable(${PROJECT_NAME}_runner main.cc)
 if (NV_MINGW)
+    message(STATUS "Compile Executable using MINGW: ON")
     target_link_libraries(${PROJECT_NAME}_runner 
         PUBLIC 
             pthread 
@@ -74,6 +77,7 @@ if (NV_MINGW)
             nvlog::nvlog 
             )
 else()
+    message(STATUS "Compile Executable using MINGW: OFF")
     target_link_libraries(${PROJECT_NAME}_runner PUBLIC nvlog::nvlog)
 endif()
 set_target_properties(${PROJECT_NAME}_runner PROPERTIES LINKER_LANGUAGE CXX)

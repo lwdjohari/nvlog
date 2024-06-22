@@ -170,23 +170,26 @@ function(NV_COMPILER)
         endif()
     endif()
 
-    if(NV_COMPILER_KEY STREQUAL "mingw32")
-      set(NV_MINGW CACHE BOOL ON)
+    option(NV_MINGW "Is Compiled using mingw" OFF)
+    if(${NV_COMPILER_KEY} STREQUAL "mingw32")
+      message(STATUS "MINGW: ON")
+      set(NV_MINGW ON CACHE BOOL "" FORCE)
     endif()
 
     # Display the detected values
     message(STATUS "Detected C compiler: ${NV_C_COMPILER}")
     message(STATUS "Detected C++ compiler: ${NV_CXX_COMPILER}")
     message(STATUS "Compiler key: ${NV_COMPILER_KEY}")
+
 endfunction()
 
 function (NV_SET_DIST_DIR PROJ_NAME DIR PFID )
 set(NV_PROJ_IS_DEBUG ON)
 NV_COMPILE_MODE(${NV_PROJ_IS_DEBUG})
 if(NV_PROJ_IS_DEBUG)
-  set(NV_PROJ_COMP_MODE "debug")
+  set(NV_PROJ_COMP_MODE "debug" CACHE STRING "" FORCE)
 else()
-  set(NV_PROJ_COMP_MODE "rel")
+  set(NV_PROJ_COMP_MODE "rel" CACHE STRING "" FORCE)
 endif()
 
 set_target_properties(${PROJ_NAME}
