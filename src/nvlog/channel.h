@@ -54,6 +54,7 @@ class Channel {
       sink->Shutdown();
     }
     running_.store(false);
+    queue_.Enqueue(nullptr);
     if (worker_thread_.joinable()) {
       worker_thread_.join();
     }
@@ -98,7 +99,7 @@ class Channel {
 
         if(!running_){
             prepare_shutdown_ .store(false);
-            std::cout << "Channel::Terminated";
+            std::cout << "Channel::Terminated" << std::endl;
             break;
         }
       }

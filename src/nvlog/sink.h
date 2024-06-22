@@ -1,6 +1,6 @@
 #pragma once
 
-#include <absl/synchronization/mutex.h>
+// #include <absl/synchronization/mutex.h>
 
 #include <atomic>
 #include <condition_variable>
@@ -55,9 +55,8 @@ class AsyncSink : public Sink {
       prepare_shutdown_.store(true);
       queue_.Enqueue(nullptr);  // Enqueue a null to unblock the worker thread
 
-      while(!queue_.Empty()){
-
-      }
+      // while (!queue_.Empty()) {
+      // }
       // we need pump until no message left
       if (worker_thread_.joinable()) {
         worker_thread_.join();
@@ -87,13 +86,13 @@ class AsyncSink : public Sink {
     while (running_) {
       std::shared_ptr<LogMessage> log_message;
       queue_.WaitAndDequeue(log_message);
-      if(log_message){
-        std::cout << "count: " << total_ << std::endl;
-      total_++;
       if (prepare_shutdown_.load())
         break;
+
+      if (log_message) {
+        Process(log_message);
+        // total_++;
       }
-      
       // if (prepare_shutdown_.load())
       //   break;
       // if (log_message) {
@@ -110,9 +109,7 @@ class AsyncSink : public Sink {
 
         queue_.TryDequeue(log_message);
         if (log_message) {
-          std::cout << "count: " << total_ << std::endl;
-          total_++;
-          // Process(log_message);
+          Process(log_message);
         }
       }
     }

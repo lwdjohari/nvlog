@@ -1,6 +1,7 @@
 #pragma once
 #include <atomic>
 #include <chrono>
+#include <thread>
 #include <mutex>
 
 #include "nvlog/limiters/rate_limiter.h"

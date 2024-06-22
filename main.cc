@@ -33,7 +33,7 @@ void CreateProducers(int num_producers, int logs_per_producer) {
 int main(int argc, char* argv[]) {
   // Set number of producer threads and number of logs per thread
   int num_producers = 4;        // Default number of producers
-  int logs_per_producer = 100;  // Default number of logs per producer
+  int logs_per_producer = 500;  // Default number of logs per producer
 
   try {
     if (argc > 1) {
@@ -57,10 +57,10 @@ int main(int argc, char* argv[]) {
   auto console_sink = std::make_shared<nvlog::ConsoleSink>();
   console_sink->SetFormatter(nvlog::SimpleFormatter);
 
-  auto file_sink = std::make_shared<nvlog::DeferredFileSink>(
-      "app.log", 8 * 1024, std::chrono::seconds(10));
+  // auto file_sink = std::make_shared<nvlog::DeferredFileSink>(
+  //     "app.log", 8 * 1024, std::chrono::seconds(10));
 
-  std::vector<std::shared_ptr<nvlog::Sink>> sinks = {console_sink, file_sink};
+  std::vector<std::shared_ptr<nvlog::Sink>> sinks = {console_sink};
 
   nvlog::Logger::RegisterLogger(sinks);
   nvlog::Logger::Get()->StartEngine();
@@ -69,6 +69,7 @@ int main(int argc, char* argv[]) {
   LOG_TRACE_T("Logger Initialize", "LOGGER")
   LOG_TRACE_COND_T(num_producers == 4, "Producer is 4", "COND")
   CreateProducers(num_producers, logs_per_producer);
+  std::this_thread::sleep_for(std::chrono::seconds(10));
   LOG_TRACE_T("Logger shutdown", "LOGGER")
   nvlog::Logger::Get()->ShutdownEngine();
 
