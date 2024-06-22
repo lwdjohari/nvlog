@@ -136,3 +136,66 @@ function(NV_GET_CXX_VERSION OUTPUT_VAR)
   message(WARNING "Unknown or unsupported C++ standard: ${CMAKE_CXX_STANDARD}")
   endif()
 endfunction()
+
+function(NV_COMPILE_MODE IS_DEBUG)
+if (CMAKE_BUILD_TYPE STREQUAL "Debug")
+  set(IS_DEBUG ON)
+else()
+  set(IS_DEBUG OFF)
+endif()
+endfunction()
+
+function(NV_COMPILER)
+    # Initialize variables
+    set(NV_C_COMPILER ${CMAKE_C_COMPILER} CACHE STRING "Detected C compiler" FORCE)
+    set(NV_CXX_COMPILER ${CMAKE_CXX_COMPILER} CACHE STRING "Detected C++ compiler" FORCE)
+
+    if (CMAKE_C_COMPILER_ID STREQUAL "MSVC")
+        # For MSVC, use the MSVC compiler id
+        set(NV_COMPILER_KEY "msvc" CACHE STRING "Detected MSVC compiler" FORCE)
+    else()
+        # For other compilers, use -dumpmachine to extract the key
+        execute_process(COMMAND ${CMAKE_C_COMPILER} -dumpmachine
+                        OUTPUT_VARIABLE NV_COMP_KEY
+                        OUTPUT_STRIP_TRAILING_WHITESPACE)
+
+        # Extract the relevant part from the compiler key
+        string(REGEX MATCH "mingw32|linux-gnu|darwin|cygwin|freebsd" NV_COMPILER_KEY ${NV_COMP_KEY})
+
+        # Check if the compiler key was correctly extracted
+        if (NV_COMPILER_KEY STREQUAL "")
+            set(NV_COMPILER_KEY "unknown" CACHE STRING "Detected unknown compiler" FORCE)
+        else()
+            set(NV_COMPILER_KEY ${NV_COMPILER_KEY} CACHE STRING "Detected compiler key" FORCE)
+        endif()
+    endif()
+
+    if(NV_COMPILER_KEY STREQUAL "mingw32")
+      set(NV_MINGW CACHE BOOL ON)
+    endif()
+
+    # Display the detected values
+    message(STATUS "Detected C compiler: ${NV_C_COMPILER}")
+    message(STATUS "Detected C++ compiler: ${NV_CXX_COMPILER}")
+    message(STATUS "Compiler key: ${NV_COMPILER_KEY}")
+endfunction()
+
+function (NV_SET_DIST_DIR PROJ_NAME DIR PFID )
+set(NV_PROJ_IS_DEBUG ON)
+NV_COMPILE_MODE(${NV_PROJ_IS_DEBUG})
+if(NV_PROJ_IS_DEBUG)
+  set(NV_PROJ_COMP_MODE "debug")
+else()
+  set(NV_PROJ_COMP_MODE "rel")
+endif()
+
+set_target_properties(${PROJ_NAME}
+    PROPERTIES
+    ARCHIVE_OUTPUT_DIRECTORY ${DIR}/dist/${NV_PROJ_COMP_MODE}/${PFID}
+    LIBRARY_OUTPUT_DIRECTORY ${DIR}/dist/${NV_PROJ_COMP_MODE}/${PFID}
+    RUNTIME_OUTPUT_DIRECTORY ${DIR}/dist/${NV_PROJ_COMP_MODE}/${PFID}
+)
+
+message(STATUS "Dist DIR: ${DIR}/${NV_PROJ_COMP_MODE}/${PFID}")
+
+endfunction()

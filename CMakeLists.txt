@@ -1,13 +1,14 @@
 cmake_minimum_required(VERSION 3.10)
 project(nvlog CXX)
 
-
 message(STATUS "NvLog : Configure")
 message(STATUS "-----------------------")
+
 set(CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake" ${CMAKE_MODULE_PATH})
-
-
 include(ProjectCXX)
+
+NV_COMPILER()
+
 set(ISROOT FALSE)
 set(CXX_FEATURE "")
 NV_DETECT_IS_ROOT_PROJECT(ISROOT)
@@ -19,7 +20,7 @@ if(ISROOT)
     set(NVSERV_CXX_VERSION 17)
     endif()
     option(NVSERV_CXX_STANDARD_REQUIRED "CXX Required" ON)
-    option(NVSERV_CXX_EXTENSIONS "CXX Extensions" ON)
+    option(NVSERV_CXX_EXTENSIONS "CXX Extensions" OFF)
     NV_PROPOGATE_CXX_OPTIONS(${NVSERV_CXX_VERSION} ${NVSERV_CXX_STANDARD_REQUIRED} ${NVSERV_CXX_EXTENSIONS})
 else()
     set(NVSERV_CXX_VERSION ${CMAKE_CXX_STANDARD})
@@ -35,7 +36,15 @@ file(GLOB_RECURSE SOURCES_NVLOG CONFIGURE_DEPENDS
     ${CMAKE_CURRENT_SOURCE_DIR}/src/*.s
 )
 
+
 add_library(${PROJECT_NAME} STATIC ${SOURCES_NVLOG} )
+if (NV_MINGW)
+    target_link_libraries(${PROJECT_NAME} 
+        PUBLIC 
+            pthread 
+            -static-libgcc 
+            -static-libstdc++)
+endif()
 set_target_properties(${PROJECT_NAME} PROPERTIES LINKER_LANGUAGE CXX)
 target_compile_features(${PROJECT_NAME} PUBLIC ${CXX_FEATURE})
 target_include_directories(${PROJECT_NAME}
@@ -45,12 +54,34 @@ target_include_directories(${PROJECT_NAME}
 
 add_library(${PROJECT_NAME}::${PROJECT_NAME} ALIAS ${PROJECT_NAME} )
 
-add_subdirectory(tests build-nvlog-test)
+NV_SET_DIST_DIR(${PROJECT_NAME} ${CMAKE_CURRENT_SOURCE_DIR} ${NV_COMPILER_KEY})
+
+message(STATUS "${NV_COMPILER_KEY}")
+if(NOT NV_COMPILER_KEY STREQUAL "mingw32")
+    message(STATUS "NvLog Test: ON")
+    add_subdirectory(tests build-nvlog-test)
+else()
+    message(STATUS "NvLog Test: OFF")
+endif()
 
 add_executable(${PROJECT_NAME}_runner main.cc)
-target_link_libraries(${PROJECT_NAME}_runner PUBLIC nvlog::nvlog)
+if (NV_MINGW)
+    target_link_libraries(${PROJECT_NAME}_runner 
+        PUBLIC 
+            pthread 
+            -static-libgcc 
+            -static-libstdc++
+            nvlog::nvlog 
+            )
+else()
+    target_link_libraries(${PROJECT_NAME}_runner PUBLIC nvlog::nvlog)
+endif()
 set_target_properties(${PROJECT_NAME}_runner PROPERTIES LINKER_LANGUAGE CXX)
 target_compile_features(${PROJECT_NAME}_runner PUBLIC ${CXX_FEATURE})
+
+NV_SET_DIST_DIR(${PROJECT_NAME}_runner ${CMAKE_CURRENT_SOURCE_DIR} ${NV_COMPILER_KEY})
+
+
 # target_include_directories(${PROJECT_NAME}_test
 #     PUBLIC
 #         ${CMAKE_CURRENT_SOURCE_DIR}/src/

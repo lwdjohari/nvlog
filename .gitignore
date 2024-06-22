@@ -32,3 +32,6 @@
 *.app
 
 build/
+dist/
+.vscode/*
+!.vscode/cmake-kits.json
