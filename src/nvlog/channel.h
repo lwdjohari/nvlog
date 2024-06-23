@@ -42,13 +42,15 @@ class Channel {
   }
 
   void Shutdown(bool force) {
-    if (!running_)
+    if(!running_.load() || prepare_shutdown_.load())
       return;
+
     prepare_shutdown_ = true;
     queue_.Enqueue(nullptr);  // Enqueue a null to unblock the worker thread
     // sink have different rate for shutdown
-    // channel can goes black first
+    // 1 sink can goes black first without finished the log
     for (const auto& sink : sinks_) {
+      // each sink already joined inside shutdown
       sink->Shutdown();
     }
     running_.store(false);
@@ -56,9 +58,6 @@ class Channel {
     if (worker_thread_.joinable()) {
       worker_thread_.join();
     }
-
-    // running_ = false;
-    // queue_.Enqueue(nullptr);
   }
 
   void Enqueue(const std::shared_ptr<LogMessage>& log_message) {
@@ -73,7 +72,7 @@ class Channel {
 
  private:
   void Process() {
-    while (running_) {
+    while (running_.load()) {
       std::shared_ptr<LogMessage> log_message;
       queue_.WaitAndDequeue(log_message);
       if (log_message) {
@@ -81,11 +80,11 @@ class Channel {
           sink->Log(log_message);
         }
       }
-      if (prepare_shutdown_)
+      if (prepare_shutdown_.load())
         break;
     }
 
-    while (prepare_shutdown_) {
+    while (prepare_shutdown_.load()) {
       if (!queue_.Empty()) {
         std::shared_ptr<LogMessage> log_message;
         queue_.TryDequeue(log_message);
@@ -95,7 +94,7 @@ class Channel {
           }
         }
 
-        if (!running_) {
+        if (!running_.load()) {
           prepare_shutdown_.store(false);
 #if  NVLOG_DEBUG == 1 && NVLOG_TRACE == 1
           std::cout << "Channel::Terminated" << std::endl;

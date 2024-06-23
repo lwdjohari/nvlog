@@ -41,36 +41,26 @@ class AsyncSink : public Sink {
   }
 
   virtual void Start() override {
-    if (running_)
+    if (running_.load())
       return;
     running_ = true;
     total_ = 0;
-    prepare_shutdown_ = false;
+    prepare_shutdown_.store(false);
     worker_thread_ = std::thread(&AsyncSink::Run, this);
   }
 
   virtual void Shutdown(bool force = false) override {
-    if (running_) {
-      // running_.store(false);
-      prepare_shutdown_.store(true);
-      queue_.Enqueue(nullptr);  // Enqueue a null to unblock the worker thread
+    if(!running_.load() || prepare_shutdown_.load())
+      return;
 
-      // while (!queue_.Empty()) {
-      // }
-      // we need pump until no message left
+    if (running_.load()) {
+      prepare_shutdown_.store(true);
+      // Enqueue a null to unblock the worker thread
+      queue_.Enqueue(nullptr);  
+
       if (worker_thread_.joinable()) {
         worker_thread_.join();
       }
-
-      // // Ensure the remaining log messages are processed
-      // while (!queue_.Empty()) {
-      //   // std::cout << "empty" << std::endl;
-      //   std::shared_ptr<LogMessage> log_message;
-      //   queue_.TryDequeue(log_message);
-      //   if (log_message) {
-      //     Process(log_message);
-      //   }
-      // }
     }
   }
 
@@ -83,11 +73,16 @@ class AsyncSink : public Sink {
 
  private:
   void Run() {
-    while (running_) {
+    while (running_.load()) {
       std::shared_ptr<LogMessage> log_message;
       queue_.WaitAndDequeue(log_message);
-      if (prepare_shutdown_.load())
+      if (prepare_shutdown_.load()) {
+#if NVLOG_DEBUG == 1 && NVLOG_TRACE == 1
+        std::cout << "Sink::WORKER_BREAK: " << queue_.Size() << " logs left."
+                  << std::endl;
+#endif
         break;
+      }
 
       if (log_message) {
         Process(log_message);
@@ -98,12 +93,11 @@ class AsyncSink : public Sink {
     if (prepare_shutdown_.load()) {
 // Process remaining messages after running_ is set to false
 #if NVLOG_DEBUG == 1 && NVLOG_TRACE == 1
-      std::cout << "ConsoleSink::PREPARE SHUTDOWN: " << queue_.Size()
-                << " logs left." << std::endl;
+      std::cout << "Sink::PREPARE SHUTDOWN: " << queue_.Size() << " logs left."
+                << std::endl;
 #endif
       while (!queue_.Empty()) {
         std::shared_ptr<LogMessage> log_message;
-        // std::cout << "queue: " << queue_.Size() << std::endl;
 
         queue_.TryDequeue(log_message);
         if (log_message) {

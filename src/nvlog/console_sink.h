@@ -16,8 +16,8 @@ class ConsoleSink : public AsyncSink {
   /* data */
  public:
   ConsoleSink()
-                  : main_thread_id(std::this_thread::get_id())
-                    {}
+
+  {}
 
   ~ConsoleSink() {
     // if(IsRun()){
@@ -27,7 +27,6 @@ class ConsoleSink : public AsyncSink {
 
  protected:
   void Process(const std::shared_ptr<LogMessage>& log_message) override {
-    
     std::ostringstream ss;
     if (formatter_) {
       formatter_(ss, *log_message);
@@ -38,7 +37,6 @@ class ConsoleSink : public AsyncSink {
   }
 
  private:
-  std::thread::id main_thread_id;
   std::mutex mtx_;
   void PrintToConsole(const std::string& msg) {
     std::lock_guard<std::mutex> lock(mtx_);
