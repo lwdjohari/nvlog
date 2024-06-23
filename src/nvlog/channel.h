@@ -16,18 +16,16 @@ namespace nvlog {
 
 class Channel {
  public:
-  Channel(std::shared_ptr<nvlog::limiters::RateLimiter> rate_limiter)
+  explicit Channel(std::shared_ptr<nvlog::limiters::RateLimiter> rate_limiter)
                   : rate_limiter_(rate_limiter), running_(false) {}
 
-  Channel(std::shared_ptr<nvlog::limiters::RateLimiter> rate_limiter,
-          std::vector<std::shared_ptr<nvlog::Sink>>& sinks)
+  explicit Channel(std::shared_ptr<nvlog::limiters::RateLimiter> rate_limiter,
+                   std::vector<std::shared_ptr<nvlog::Sink>>& sinks)
                   : sinks_(sinks),
                     rate_limiter_(rate_limiter),
                     running_(false) {}
 
-  ~Channel() {
-    
-  }
+  ~Channel() {}
 
   void Start() {
     if (running_)
@@ -97,10 +95,12 @@ class Channel {
           }
         }
 
-        if(!running_){
-            prepare_shutdown_ .store(false);
-            std::cout << "Channel::Terminated" << std::endl;
-            break;
+        if (!running_) {
+          prepare_shutdown_.store(false);
+#if  NVLOG_DEBUG == 1 && NVLOG_TRACE == 1
+          std::cout << "Channel::Terminated" << std::endl;
+#endif
+          break;
         }
       }
     }

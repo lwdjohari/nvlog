@@ -69,8 +69,8 @@ int main(int argc, char* argv[]) {
   LOG_TRACE_T("Logger Initialize", "LOGGER")
   LOG_TRACE_COND_T(num_producers == 4, "Producer is 4", "COND")
   CreateProducers(num_producers, logs_per_producer);
-  LOG_WARN_T("Sleep for 10s", "LOGGER")
-  std::this_thread::sleep_for(std::chrono::seconds(10));
+  LOG_WARN_T("Sleep for 1s", "LOGGER")
+  std::this_thread::sleep_for(std::chrono::seconds(1));
   LOG_TRACE_T("Logger shutdown", "LOGGER")
   nvlog::Logger::Get()->ShutdownEngine();
 

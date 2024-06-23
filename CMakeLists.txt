@@ -4,6 +4,7 @@ project(nvlog CXX)
 message(STATUS "NvLog : Configure")
 message(STATUS "-----------------------")
 
+option(NVLOG_TRACE "Print trace while in DEBUG mode" OFF)
 set(CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake" ${CMAKE_MODULE_PATH})
 include(ProjectCXX)
 
@@ -13,6 +14,10 @@ set(ISROOT FALSE)
 set(CXX_FEATURE "")
 NV_DETECT_IS_ROOT_PROJECT(ISROOT)
 
+set (ISDEBUG ON) 
+NV_COMPILE_MODE(ISDEBUG)
+
+
 message(STATUS "NvLog Root Project: ${ISROOT} ${NVSERV_CXX_VERSION}")
 
 if(ISROOT)
@@ -21,9 +26,23 @@ if(ISROOT)
     endif()
     option(NVSERV_CXX_STANDARD_REQUIRED "CXX Required" ON)
     option(NVSERV_CXX_EXTENSIONS "CXX Extensions" OFF)
+    set(NVLOG_TRACE ON)
     NV_PROPOGATE_CXX_OPTIONS(${NVSERV_CXX_VERSION} ${NVSERV_CXX_STANDARD_REQUIRED} ${NVSERV_CXX_EXTENSIONS})
 else()
     set(NVSERV_CXX_VERSION ${CMAKE_CXX_STANDARD})
+endif()
+
+set(NVLOG_FEATURE_DEFINITION)
+if(ISDEBUG)
+    LIST(APPEND NVLOG_FEATURE_DEFINITION NVLOG_DEBUG=1)
+else()
+    LIST(APPEND NVLOG_FEATURE_DEFINITION NVLOG_DEBUG=0)
+endif()
+
+if(NVLOG_TRACE)
+    LIST(APPEND NVLOG_FEATURE_DEFINITION NVLOG_TRACE=1)
+else()
+    LIST(APPEND NVLOG_FEATURE_DEFINITION NVLOG_TRACE=0)
 endif()
 
 NV_GET_CXX_STD_FEATURE(${NVSERV_CXX_VERSION} CXX_FEATURE)
@@ -35,6 +54,12 @@ file(GLOB_RECURSE SOURCES_NVLOG CONFIGURE_DEPENDS
     ${CMAKE_CURRENT_SOURCE_DIR}/src/*.cc
     ${CMAKE_CURRENT_SOURCE_DIR}/src/*.s
 )
+
+# Convert the list to a comma-separated string
+string(JOIN ", " NVLOG_FEATURES_JOIN ${NVLOG_FEATURE_DEFINITION})
+
+# Print the comma-separated list
+message(STATUS "Compile Flags: ${NVLOG_FEATURES_JOIN}")
 
 
 add_library(${PROJECT_NAME} STATIC ${SOURCES_NVLOG} )
@@ -48,6 +73,7 @@ if (NV_MINGW)
             -static-libstdc++)
 endif()
 set_target_properties(${PROJECT_NAME} PROPERTIES LINKER_LANGUAGE CXX)
+target_compile_definitions(${PROJECT_NAME} PUBLIC  ${NVLOG_FEATURE_DEFINITION})
 target_compile_features(${PROJECT_NAME} PUBLIC ${CXX_FEATURE})
 target_include_directories(${PROJECT_NAME}
     PUBLIC

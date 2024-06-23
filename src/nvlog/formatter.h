@@ -47,6 +47,7 @@ inline void DefaultFormatter(std::ostringstream& buffer,
   // clang-format off
   DefaultLevelFormatter(buffer, log_message.log_level);
   buffer 
+      << "[" 
       << std::setw(4) << std::setfill('0') << (1900 + tm.tm_year) << "-"
       << std::setw(2) << std::setfill('0') << (1 + tm.tm_mon) << "-"
       << std::setw(2) << tm.tm_mday
@@ -55,7 +56,7 @@ inline void DefaultFormatter(std::ostringstream& buffer,
       << std::setw(2) << tm.tm_min << ':'
       << std::setw(2) << tm.tm_sec << '.'
       << std::setw(6) << ms.count()
-      << ' '
+      << "] tid=" 
       << std::setw(5) << std::setfill(' ') << log_message.thread_id << std::setfill('0')
       << ' '
       << log_message.file << ':' << log_message.line << "]\n" 

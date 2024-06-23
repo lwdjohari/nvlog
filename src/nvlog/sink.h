@@ -93,16 +93,14 @@ class AsyncSink : public Sink {
         Process(log_message);
         // total_++;
       }
-      // if (prepare_shutdown_.load())
-      //   break;
-      // if (log_message) {
-      //   Process(log_message);
-      // }
     }
 
-    if (prepare_shutdown_) {
-      // Process remaining messages after running_ is set to false
-      std::cout << "PREPARE SHUTDOWN" << std::endl;
+    if (prepare_shutdown_.load()) {
+// Process remaining messages after running_ is set to false
+#if NVLOG_DEBUG == 1 && NVLOG_TRACE == 1
+      std::cout << "ConsoleSink::PREPARE SHUTDOWN: " << queue_.Size()
+                << " logs left." << std::endl;
+#endif
       while (!queue_.Empty()) {
         std::shared_ptr<LogMessage> log_message;
         // std::cout << "queue: " << queue_.Size() << std::endl;
@@ -112,6 +110,10 @@ class AsyncSink : public Sink {
           Process(log_message);
         }
       }
+#if NVLOG_DEBUG == 1 && NVLOG_TRACE == 1
+      std::cout << "ConsoleSink::SHUTDOWN: " << queue_.Size() << " logs left."
+                << std::endl;
+#endif
     }
 
     running_.store(false);
